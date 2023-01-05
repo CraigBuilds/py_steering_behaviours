@@ -31,21 +31,6 @@ def toggle_behaviours(current_behaviours: List[STEERING_BEHAVIOUR]):
         if keys[pygame.K_4]:
             toggle(STEERING_BEHAVIOUR.REPULSE, current_behaviours)
 
-time_of_last_pause = datetime.datetime.now()
-paused = False
-def pause():
-    #pause if right space button is pressed.
-    #limit the pause rate to 0.1 seconds
-    global time_of_last_pause
-    global paused
-    now = datetime.datetime.now()
-    if now - time_of_last_pause > datetime.timedelta(seconds=0.1):
-        time_of_last_pause = now
-        if pygame.mouse.get_pressed()[2]:
-            paused = not paused
-            print(f"pause {paused}")
-
-    return paused
 
 time_of_last_element_change = datetime.datetime.now()
 def add_remove_element(list: List, Element: type):
@@ -67,20 +52,63 @@ def add_remove_element(list: List, Element: type):
             except IndexError:
                 pass
 
+time_of_last_pause = datetime.datetime.now()
+paused = False
+def pause() -> bool:
+    #pause if right space button is pressed.
+    #limit the pause rate to 0.1 seconds
+    global time_of_last_pause
+    global paused
+    now = datetime.datetime.now()
+    if now - time_of_last_pause > datetime.timedelta(seconds=0.1):
+        time_of_last_pause = now
+        if pygame.mouse.get_pressed()[2]:
+            paused = not paused
+            print(f"pause {paused}")
+
+    return paused
+
+time_of_last_trail_toggle = datetime.datetime.now()
+trails = True
+def toggle_trail() -> bool:
+    #toggle trail on and off when right shift button is pressed.
+    #limit the toggle rate to 0.1 seconds
+    global time_of_last_trail_toggle
+    global trails
+    now = datetime.datetime.now()
+    if now - time_of_last_trail_toggle > datetime.timedelta(seconds=0.1):
+        time_of_last_trail_toggle = now
+        if pygame.key.get_pressed()[pygame.K_RSHIFT]:
+            trails = not trails
+            print(f"trails {trails}")
+
+    return trails
+
+time_of_last_draw_forces_toggle = datetime.datetime.now()
+draw_forces = True
+def toggle_draw_forces() -> bool:
+    #toggle draw_forces on and off when right control button is pressed.
+    #limit the toggle rate to 0.1 seconds
+    global time_of_last_draw_forces_toggle
+    global draw_forces
+    now = datetime.datetime.now()
+    if now - time_of_last_draw_forces_toggle > datetime.timedelta(seconds=0.1):
+        time_of_last_draw_forces_toggle = now
+        if pygame.key.get_pressed()[pygame.K_RCTRL]:
+            draw_forces = not draw_forces
+            print(f"draw_forces {draw_forces}")
+
+    return draw_forces
+
 """
-properties:
-    max_attraction=1000,
-    deceleration_radius=300,
-    friction_constant=10,
-    repulsion_radius=100,
-    max_repulsion=1000,
+Parameters for steering behaviours
 """
 
 max_atraction = 1000
 time_of_last_attraction_change = datetime.datetime.now()
 def change_max_attraction(my_font, screen) -> int:
     """
-    Increase max attraction if ] button is pressed, decrease if [ button is pressed.
+    Increase max attraction if a button is pressed, decrease if z button is pressed.
     Display current value onscreen as text uppon change and fade out to black.
     """
     global time_of_last_attraction_change
@@ -88,47 +116,22 @@ def change_max_attraction(my_font, screen) -> int:
     now = datetime.datetime.now()
     if now - time_of_last_attraction_change > datetime.timedelta(seconds=0.1):
         time_of_last_attraction_change = now
-        colour = (255, 255, 255) #white
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_RIGHTBRACKET]:
+        if keys[pygame.K_a]:
             max_atraction += 100
-        if keys[pygame.K_LEFTBRACKET]:
+        if keys[pygame.K_z]:
             max_atraction -= 100
     
-    text = my_font.render(f"max_atraction [ ] {max_atraction}", False, (255, 255, 255))
+    text = my_font.render(f"max_atraction a/z {max_atraction}", False, (255, 255, 255))
     #draw on screen
     screen.blit(text, (0, 0))
     return max_atraction
-
-deceleration_radius = 300
-time_of_last_deceleration_change = datetime.datetime.now()
-def change_deceleration_radius(my_font, screen) -> int:
-    """
-    Increase deceleration radius if } button is pressed, decrease if { button is pressed.
-    Display current value onscreen as text uppon change and fade out to black.
-    """
-    global time_of_last_deceleration_change
-    global deceleration_radius
-    now = datetime.datetime.now()
-    if now - time_of_last_deceleration_change > datetime.timedelta(seconds=0.1):
-        time_of_last_deceleration_change = now
-        colour = (255, 255, 255) #white
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RIGHT]:
-            deceleration_radius += 10
-        if keys[pygame.K_LEFT]:
-            deceleration_radius -= 10
-    
-    text = my_font.render(f"deceleration_radius {{ }} {deceleration_radius}", False, (255, 255, 255))
-    #draw on screen
-    screen.blit(text, (0, 20))
-    return deceleration_radius
 
 friction_constant = 10
 time_of_last_friction_change = datetime.datetime.now()
 def change_friction_constant(my_font, screen) -> int:
     """
-    Increase friction constant if / button is pressed, decrease if . button is pressed.
+    Increase friction constant if f button is pressed, decrease if v button is pressed.
     Display current value onscreen as text uppon change and fade out to black.
     """
     global time_of_last_friction_change
@@ -136,23 +139,45 @@ def change_friction_constant(my_font, screen) -> int:
     now = datetime.datetime.now()
     if now - time_of_last_friction_change > datetime.timedelta(seconds=0.1):
         time_of_last_friction_change = now
-        colour = (255, 255, 255) #white
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SLASH]:
+        if keys[pygame.K_f]:
             friction_constant += 1
-        if keys[pygame.K_PERIOD]:
+        if keys[pygame.K_v]:
             friction_constant -= 1
     
-    text = my_font.render(f"friction_constant . / {friction_constant}", False, (255, 255, 255))
+    text = my_font.render(f"friction_constant f/v {friction_constant}", False, (255, 255, 255))
+    #draw on screen
+    screen.blit(text, (0, 20))
+    return friction_constant
+
+deceleration_radius = 300
+time_of_last_deceleration_change = datetime.datetime.now()
+def change_deceleration_radius(my_font, screen) -> int:
+    """
+    Increase deceleration radius if d button is pressed, decrease if c button is pressed.
+    Display current value onscreen as text uppon change and fade out to black.
+    """
+    global time_of_last_deceleration_change
+    global deceleration_radius
+    now = datetime.datetime.now()
+    if now - time_of_last_deceleration_change > datetime.timedelta(seconds=0.1):
+        time_of_last_deceleration_change = now
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            deceleration_radius += 10
+        if keys[pygame.K_c]:
+            deceleration_radius -= 10
+    
+    text = my_font.render(f"deceleration_radius d/c {deceleration_radius}", False, (255, 255, 255))
     #draw on screen
     screen.blit(text, (0, 40))
-    return friction_constant
+    return deceleration_radius
 
 repulsion_radius = 100
 time_of_last_repulsion_change = datetime.datetime.now()
 def change_repulsion_radius(my_font, screen) -> int:
     """
-    Increase repulsion radius if > button is pressed, decrease if < button is pressed.
+    Increase repulsion radius if r button is pressed, decrease if e button is pressed.
     Display current value onscreen as text uppon change and fade out to black.
     """
     global time_of_last_repulsion_change
@@ -160,14 +185,13 @@ def change_repulsion_radius(my_font, screen) -> int:
     now = datetime.datetime.now()
     if now - time_of_last_repulsion_change > datetime.timedelta(seconds=0.1):
         time_of_last_repulsion_change = now
-        colour = (255, 255, 255) #white
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_COMMA]:
+        if keys[pygame.K_r]:
             repulsion_radius += 10
-        if keys[pygame.K_LESS]:
+        if keys[pygame.K_e]:
             repulsion_radius -= 10
     
-    text = my_font.render(f"repulsion_radius < > {repulsion_radius}", False, (255, 255, 255))
+    text = my_font.render(f"repulsion_radius r/e {repulsion_radius}", False, (255, 255, 255))
     #draw on screen
     screen.blit(text, (0, 60))
     return repulsion_radius
@@ -176,7 +200,7 @@ max_repulsion = 1000
 time_of_last_max_repulsion_change = datetime.datetime.now()
 def change_max_repulsion(my_font, screen) -> int:
     """
-    Increase max repulsion if ; button is pressed, decrease if # button is pressed.
+    Increase max repulsion if t button is pressed, decrease if g button is pressed.
     Display current value onscreen as text uppon change and fade out to black.
     """
     global time_of_last_max_repulsion_change
@@ -186,12 +210,36 @@ def change_max_repulsion(my_font, screen) -> int:
         time_of_last_max_repulsion_change = now
         colour = (255, 255, 255) #white
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SEMICOLON]:
+        if keys[pygame.K_t]:
             max_repulsion += 100
-        if keys[pygame.K_HASH]:
+        if keys[pygame.K_g]:
             max_repulsion -= 100
     
-    text = my_font.render(f"max_repulsion ; # {max_repulsion}", False, (255, 255, 255))
+    text = my_font.render(f"max_repulsion t/g {max_repulsion}", False, (255, 255, 255))
     #draw on screen
     screen.blit(text, (0, 80))
     return max_repulsion
+
+max_speed = 100
+time_of_last_max_speed_change = datetime.datetime.now()
+def change_max_speed(my_font, screen) -> int:
+    """
+    Increase max speed if y button is pressed, decrease if h button is pressed.
+    Display current value onscreen as text uppon change and fade out to black.
+    """
+    global time_of_last_max_speed_change
+    global max_speed
+    now = datetime.datetime.now()
+    if now - time_of_last_max_speed_change > datetime.timedelta(seconds=0.1):
+        time_of_last_max_speed_change = now
+        colour = (255, 255, 255) #white
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_y]:
+            max_speed += 10
+        if keys[pygame.K_h]:
+            max_speed -= 10
+    
+    text = my_font.render(f"max_speed y/h {max_speed}", False, (255, 255, 255))
+    #draw on screen
+    screen.blit(text, (0, 100))
+    return max_speed

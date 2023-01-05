@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from typing import *
 from motion import *
 
-#TODO repulse forces for multiple agents
+#TODO display other keyboard shortcuts on screen
+#TODO Add state machine to cycle through behaviours
 
 @dataclass
 class Agent:
@@ -20,12 +21,13 @@ def main():
     pygame.init()
     pygame.font.init()
     myfont = pygame.font.SysFont('Comic Sans MS', 15)
+    myfont2 = pygame.font.SysFont('Comic Sans MS', 10)
     screen = pygame.display.set_mode((800, 600))
     clock = pygame.time.Clock()
     running = True
     trail: List[Tuple[float, float, int]] = []
     agents = [Agent()]
-    current_behaviours = [STEERING_BEHAVIOUR.FRICTION]
+    current_behaviours = [STEERING_BEHAVIOUR.SEEK, STEERING_BEHAVIOUR.FRICTION]
 
     while running:
         running = main_loop(
@@ -34,6 +36,7 @@ def main():
             agents,
             current_behaviours,
             myfont,
+            myfont2,
             trail
         )
 
@@ -43,6 +46,7 @@ def main_loop(
     agents: List[Agent],
     current_behaviours: List[STEERING_BEHAVIOUR],
     myfont: pygame.font.Font,
+    myfont2: pygame.font.Font,
     trail: List[Tuple[float, float, int]]
 ):
 
@@ -58,10 +62,12 @@ def main_loop(
     get_input_keys.add_remove_element(agents, Agent)
     max_attraction = get_input_keys.change_max_attraction(myfont, screen)
     max_repulsion = get_input_keys.change_max_repulsion(myfont, screen)
-    deceleration_radius  = 100
-    max_speed = 100
-    friction_constant = 10
-    repulsion_radius = 100
+    deceleration_radius = get_input_keys.change_deceleration_radius(myfont, screen)
+    max_speed = get_input_keys.change_max_speed(myfont, screen)
+    friction_constant = get_input_keys.change_friction_constant(myfont, screen)
+    repulsion_radius = get_input_keys.change_repulsion_radius(myfont, screen)
+    show_trail = get_input_keys.toggle_trail()
+    draw_forces = get_input_keys.toggle_draw_forces()
 
     for i, agent in enumerate(agents):
         #simulate
@@ -72,7 +78,7 @@ def main_loop(
                 current_pos=(agent.x, agent.y),
                 current_vel=(agent.vx, agent.vy),
                 target_pos=(target_x, target_y),
-                repulsors=[(agent.x,agent.y) for agent in agents],
+                repulsors=[(other.x,other.y) for other in agents if other is not agent],
                 max_attraction=max_attraction,
                 deceleration_radius=deceleration_radius,
                 friction_constant=friction_constant,
@@ -90,17 +96,17 @@ def main_loop(
     
         #draw
         pygame.draw.circle(screen, (0, 0, 255), (agent.x, agent.y), 10)
-        if i == -1:
+        if i == 0 and draw_forces:
             draw_forces_and_vel(
-                max_attraction=max_attraction,
+                behaviours = current_behaviours,
                 behaviour_forces=behaviour_forces,
                 screen=screen,
                 agent=agent,
-                myfont=myfont,
+                myfont=myfont2,
                 fx=fx,
                 fy=fy
             )
-        draw_trail(trail, screen)
+        if show_trail: draw_trail(trail, screen)
 
     #write current behaviours at top center of screen in white if enabled, grey if disabled
     for i, behaviour in enumerate(STEERING_BEHAVIOUR):
@@ -110,19 +116,19 @@ def main_loop(
             textsurface = myfont.render(f"{i} {behaviour.name}", False, (100, 100, 100))
         screen.blit(textsurface, (400 - textsurface.get_width()/2, 20 + i * 20))
 
-    #draw target as a red circle
+    #draw target mouse as a red circle
     pygame.draw.circle(screen, (255, 0, 0), (target_x, target_y), 10)
 
     pygame.display.flip()
     return True
 
 
-def draw_forces_and_vel(max_attraction, behaviour_forces, screen, agent, myfont, fx, fy):
-        scale = 100/max_attraction
+def draw_forces_and_vel(behaviours, behaviour_forces, screen, agent, myfont, fx, fy):
+        scale = 0.1
         #draw behaviour forces as a green line with text "fi" where i is the index (scaled)
-        for i, f in enumerate(behaviour_forces):
+        for b, f in zip(behaviours, behaviour_forces):
             pygame.draw.line(screen, (0, 255, 0), (agent.x, agent.y), (agent.x + f[0] * scale, agent.y + f[1] * scale))
-            textsurface = myfont.render('f' + str(i), False, (0, 255, 0))
+            textsurface = myfont.render(b.name, False, (0, 255, 0))
             screen.blit(textsurface, (agent.x + f[0] * scale, agent.y + f[1] * scale))
         #draw resultant force vector as a red line with text "f" (scaled)
         pygame.draw.line(screen, (255, 0, 0), (agent.x, agent.y), (agent.x + fx * scale, agent.y + fy * scale))

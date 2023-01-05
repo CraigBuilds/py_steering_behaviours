@@ -121,7 +121,7 @@ def apply_behaviour(
     elif current_behaviour == STEERING_BEHAVIOUR.SEEK:
         f1_x, f2_x = seek(current_pos, target_pos, max_attraction)
     elif current_behaviour == STEERING_BEHAVIOUR.FLEE:
-        f1_x, f2_x = flee(current_pos, target_pos, max_attraction)
+        f1_x, f2_x = flee(current_pos, target_pos, max_repulsion)
     elif current_behaviour == STEERING_BEHAVIOUR.ARRIVE:
         f1_x, f2_x = arrive(current_pos, target_pos, max_attraction, deceleration_radius)
     elif current_behaviour == STEERING_BEHAVIOUR.REPULSE:
